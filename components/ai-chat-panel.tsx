@@ -53,6 +53,7 @@ export function AIChatPanel({ data, onDataUpdate, templateType }: AIChatPanelPro
       status: "success",
     },
   ])
+  
   const [inputValue, setInputValue] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -140,10 +141,14 @@ export function AIChatPanel({ data, onDataUpdate, templateType }: AIChatPanelPro
         imageUrl = URL.createObjectURL(uploadedFile)
       }
 
+      // Use type assertion to handle 'cover-letter' case (TypeScript issue)
+      // In practice the function will treat cover-letter similar to resume format
+      const safeTemplateType = templateType === 'cover-letter' ? 'resume' as const : templateType;
+      
       const result = await processAICustomization({
         prompt: userMessage.content,
         currentData: data,
-        templateType,
+        templateType: safeTemplateType,
         imageUrl,
         imageName: uploadedFile?.name,
       })
@@ -153,6 +158,7 @@ export function AIChatPanel({ data, onDataUpdate, templateType }: AIChatPanelPro
 
       if (result.success) {
         onDataUpdate(result.updatedData)
+        console.log(result.updatedData)
 
         const successMessage: Message = {
           id: (Date.now() + 2).toString(),

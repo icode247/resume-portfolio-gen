@@ -58,10 +58,10 @@ export function ShowoffPortfolio({ data }: ShowoffPortfolioProps) {
 
           <h1 className="text-6xl md:text-8xl font-black mb-6">
             <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-              CREATIVE
+             {portfolio?.name.split(" ")[0]}
             </span>
             <br />
-            <span className="text-white">DEVELOPER</span>
+            <span className="text-white">{portfolio?.name.split(" ")[1]}</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -91,13 +91,12 @@ export function ShowoffPortfolio({ data }: ShowoffPortfolioProps) {
             <div>
               <h3 className="text-3xl font-bold mb-6">Passionate Developer</h3>
               <p className="text-lg text-white/80 leading-relaxed mb-6">
-                With {portfolio?.stats?.yearsActive || 'several'} years of experience in web development and design, I specialize in
-                creating visually stunning and highly functional digital solutions.
+                {portfolio?.summary}
               </p>
-              <p className="text-lg text-white/80 leading-relaxed mb-8">
+              {/* <p className="text-lg text-white/80 leading-relaxed mb-8">
                 My GitHub profile showcases {portfolio?.stats?.repositories || 'many'} repositories with a focus on modern web technologies.
                 I believe in the power of great code to transform ideas into reality.
-              </p>
+              </p> */}
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center p-6 bg-white/5 rounded-lg backdrop-blur-sm">

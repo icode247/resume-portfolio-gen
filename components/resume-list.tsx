@@ -113,9 +113,9 @@ export function ResumeList() {
                   <DropdownMenuItem onClick={() => (window.location.href = `/preview/${resume.id}`)}>
                     View
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => (window.location.href = `/edit/${resume.id}`)}>
+                  {/* <DropdownMenuItem onClick={() => (window.location.href = `/edit/${resume.id}`)}>
                     Edit
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem>Duplicate</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDelete(resume.id)}>Delete</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -125,7 +125,7 @@ export function ResumeList() {
           <CardContent className="p-0">
             <div className="aspect-[3/4] relative overflow-hidden">
               <img
-                src="/placeholder.svg?height=400&width=300"
+                src={resume.content.avatar}
                 alt={resume.title}
                 className="object-cover w-full h-full"
               />

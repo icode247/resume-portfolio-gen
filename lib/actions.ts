@@ -12,7 +12,7 @@ export async function subscribeToNewsletter(email: string) {
 
     // Send welcome email using Resend
     const { data, error } = await resend.emails.send({
-      from: "DevFolio <onboarding@resend.dev>",
+      from: "DevFolio <notifications@resend.dev>",
       to: email,
       subject: "🚀 Welcome to DevFolio - Transform Your GitHub Into a Professional Resume!",
       html: `

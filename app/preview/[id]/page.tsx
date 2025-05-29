@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Share2, Edit } from "lucide-react"
+import { ArrowLeft, Share2, Edit, Download } from "lucide-react"
 import { getGeneratedContent } from "@/lib/generator"
 import { TemplateSelector } from "@/components/template-selector"
 import { AIChatPanel } from "@/components/ai-chat-panel"
 import { incrementResumeViews, incrementResumeDownloads } from "@/lib/database"
+import { handleDownload } from "@/lib/download-handler"
 
 export default function PreviewPage() {
   const params = useParams()
@@ -17,6 +18,7 @@ export default function PreviewPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any>(null)
   const [currentTemplateType, setCurrentTemplateType] = useState<"resume" | "portfolio" | "cover-letter">("portfolio")
+  const [downloadingStates, setDownloadingStates] = useState<{[key: string]: boolean}>({})
   const id = params.id as string
 
   useEffect(() => {
@@ -43,25 +45,45 @@ export default function PreviewPage() {
     fetchData()
   }, [id, toast])
 
-  const handleDownload = async (templateType: string, templateName: string) => {
+  const handleDownloadTemplate = async (templateType: string, templateName: string) => {
+    const downloadKey = `${templateType}-${templateName}`
+    
     try {
+      // Set loading state for this specific template
+      setDownloadingStates(prev => ({ ...prev, [downloadKey]: true }))
+
+      // Track download
       if (id && !id.startsWith("temp-")) {
         await incrementResumeDownloads(id)
       }
 
       toast({
-        title: "Download started",
-        description: `Your ${templateType} (${templateName}) is being prepared for download.`,
+        title: "Preparing download...",
+        description: `Your ${templateType} (${templateName}) is being prepared.`,
       })
 
-      // Here you would implement actual PDF generation or deployment
-      console.log(`Downloading ${templateType} - ${templateName}`)
+      // Call the download handler
+      const result = await handleDownload(templateType, templateName, data)
+
+      if (result.success) {
+        toast({
+          title: "Download successful!",
+          description: result.message,
+        })
+      } else {
+        throw new Error(result.message)
+      }
+
     } catch (error) {
+      console.error('Download error:', error)
       toast({
-        title: "Error",
-        description: "Failed to download. Please try again.",
+        title: "Download failed",
+        description: error instanceof Error ? error.message : "Failed to download. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      // Remove loading state
+      setDownloadingStates(prev => ({ ...prev, [downloadKey]: false }))
     }
   }
 
@@ -125,7 +147,7 @@ export default function PreviewPage() {
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700">
-        <div className="container py-4">
+        <div className="container py-4 m-auto">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -144,28 +166,33 @@ export default function PreviewPage() {
                 <Share2 className="h-4 w-4" />
                 Share
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={() => router.push(`/edit/${id}`)}
                 className="gap-2 border-gray-600 text-gray-300 hover:text-white"
               >
                 <Edit className="h-4 w-4" />
                 Edit
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="container py-8">
+      <div className="container py-8 m-auto">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-2 text-white">Your Content is Ready! 🎉</h1>
             <p className="text-xl text-gray-400">Choose from our professional templates to showcase your work</p>
           </div>
 
-          <TemplateSelector data={data} onDownload={handleDownload} onPreview={handlePreview} />
+          <TemplateSelector 
+            data={data} 
+            onDownload={handleDownloadTemplate}
+            onPreview={handlePreview}
+            downloadingStates={downloadingStates}
+          />
         </div>
       </div>
 

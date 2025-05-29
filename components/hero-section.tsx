@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Github } from "lucide-react"
+import { Github, Play } from "lucide-react"
 
 export function HeroSection() {
   return (
@@ -32,12 +32,23 @@ export function HeroSection() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="relative w-full max-w-[500px] aspect-[4/3] overflow-hidden rounded-lg border bg-background shadow-xl">
-              <img
-                src="/placeholder.svg?height=600&width=800"
-                alt="Resume preview"
+            <div className="relative w-full max-w-[500px] aspect-[4/3] overflow-hidden rounded-lg border bg-background shadow-xl group">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
                 className="object-cover w-full h-full"
-              />
+                poster="/demo-poster.jpg"
+              >
+                <source src="/demo.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="rounded-full bg-white/80 p-3 shadow-lg">
+                  <Play className="h-8 w-8 text-primary fill-current" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -45,7 +45,7 @@ export default function DashboardPage() {
             <TabsList>
               <TabsTrigger value="resumes">Resumes</TabsTrigger>
               <TabsTrigger value="portfolios">Portfolios</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              {/* <TabsTrigger value="analytics">Analytics</TabsTrigger> */}
             </TabsList>
           </div>
           <TabsContent value="resumes" className="space-y-4">
@@ -54,9 +54,9 @@ export default function DashboardPage() {
           <TabsContent value="portfolios" className="space-y-4">
             <PortfolioList />
           </TabsContent>
-          <TabsContent value="analytics" className="space-y-4">
+          {/* <TabsContent value="analytics" className="space-y-4">
             <AnalyticsDashboard />
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
     </DashboardShell>

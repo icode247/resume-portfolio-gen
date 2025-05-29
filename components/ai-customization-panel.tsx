@@ -66,31 +66,33 @@ export function AICustomizationPanel({ data, onDataUpdate, templateType }: AICus
         imageUrl = URL.createObjectURL(uploadedFile)
       }
 
-      const result = await processAICustomization({
-        prompt,
-        currentData: data,
-        templateType,
-        imageUrl,
-        imageName: uploadedFile?.name,
-      })
+      console.log(data)
 
-      if (result.success) {
-        onDataUpdate(result.updatedData)
-        setRecentChanges((prev) => [result.changeDescription, ...prev.slice(0, 4)])
-        setPrompt("")
-        setUploadedFile(null)
+      // const result = await processAICustomization({
+      //   prompt,
+      //   currentData: data,
+      //   templateType,
+      //   imageUrl,
+      //   imageName: uploadedFile?.name,
+      // })
 
-        toast({
-          title: "Changes applied!",
-          description: result.changeDescription,
-        })
-      } else {
-        toast({
-          title: "Error processing request",
-          description: result.error || "Please try rephrasing your request.",
-          variant: "destructive",
-        })
-      }
+      // if (result.success) {
+      //   onDataUpdate(result.updatedData)
+      //   setRecentChanges((prev) => [String(result.changeDescription) || 'Changes applied', ...prev.slice(0, 4)])
+      //   setPrompt("")
+      //   setUploadedFile(null)
+
+      //   toast({
+      //     title: "Changes applied!",
+      //     description: String(result.changeDescription),
+      //   })
+      // } else {
+      //   toast({
+      //     title: "Error processing request",
+      //     description: result.error || "Please try rephrasing your request.",
+      //     variant: "destructive",
+      //   })
+      // }
     } catch (error) {
       console.error("AI customization error:", error)
       toast({

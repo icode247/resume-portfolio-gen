@@ -16,26 +16,26 @@ export function DashboardNav() {
       href: "/dashboard",
       icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
     },
-    {
-      title: "Resumes",
-      href: "/dashboard/resumes",
-      icon: <FileText className="mr-2 h-4 w-4" />,
-    },
-    {
-      title: "Portfolios",
-      href: "/dashboard/portfolios",
-      icon: <Briefcase className="mr-2 h-4 w-4" />,
-    },
-    {
-      title: "Settings",
-      href: "/dashboard/settings",
-      icon: <Settings className="mr-2 h-4 w-4" />,
-    },
-    {
-      title: "Help",
-      href: "/dashboard/help",
-      icon: <HelpCircle className="mr-2 h-4 w-4" />,
-    },
+    // {
+    //   title: "Resumes",
+    //   href: "/dashboard/resumes",
+    //   icon: <FileText className="mr-2 h-4 w-4" />,
+    // },
+    // {
+    //   title: "Portfolios",
+    //   href: "/dashboard/portfolios",
+    //   icon: <Briefcase className="mr-2 h-4 w-4" />,
+    // },
+    // {
+    //   title: "Settings",
+    //   href: "/dashboard/settings",
+    //   icon: <Settings className="mr-2 h-4 w-4" />,
+    // },
+    // {
+    //   title: "Help",
+    //   href: "/dashboard/help",
+    //   icon: <HelpCircle className="mr-2 h-4 w-4" />,
+    // },
   ]
 
   return (
