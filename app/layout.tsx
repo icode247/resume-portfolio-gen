@@ -9,7 +9,7 @@ import { PostHogProvider } from "@/app/providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "DevFolio - GitHub Resume Generator",
+  title: "Limi.ai- GitHub Resume Generator",
   description: "Generate professional resumes and portfolios from your GitHub profile",
     generator: 'v0.dev'
 }

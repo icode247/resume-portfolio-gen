@@ -12,20 +12,20 @@ export async function subscribeToNewsletter(email: string) {
 
     // Send welcome email using Resend
     const { data, error } = await resend.emails.send({
-      from: "DevFolio <notifications@resend.dev>",
+      from: "Limi.ai <notifications@resend.dev>",
       to: email,
-      subject: "🚀 Welcome to DevFolio - Transform Your GitHub Into a Professional Resume!",
+      subject: "🚀 Welcome to Limi.ai - Transform Your GitHub Into a Professional Resume!",
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Welcome to DevFolio</title>
+          <title>Welcome to Limi.ai</title>
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin-bottom: 10px;">Welcome to DevFolio! 🎉</h1>
+            <h1 style="color: #2563eb; margin-bottom: 10px;">Welcome to Limi.ai! 🎉</h1>
             <p style="font-size: 18px; color: #666;">Transform your GitHub profile into a professional resume</p>
           </div>
           
@@ -55,7 +55,7 @@ export async function subscribeToNewsletter(email: string) {
           
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #666; font-size: 14px;">
             <p>Thanks for joining our community of developers!</p>
-            <p>Best regards,<br><strong>The DevFolio Team</strong></p>
+            <p>Best regards,<br><strong>The Limi.ai Team</strong></p>
             <p style="margin-top: 20px;">
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${encodeURIComponent(email)}" style="color: #666; text-decoration: none;">Unsubscribe</a> | 
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/preferences?email=${encodeURIComponent(email)}" style="color: #666; text-decoration: none;">Update Preferences</a>
@@ -82,7 +82,7 @@ export async function subscribeToNewsletter(email: string) {
 export async function sendResumeGeneratedEmail(email: string, resumeUrl: string, resumeTitle: string) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "DevFolio <notifications@resend.dev>",
+      from: "Limi.ai <notifications@resend.dev>",
       to: email,
       subject: "✅ Your Resume is Ready!",
       html: `
@@ -111,7 +111,7 @@ export async function sendResumeGeneratedEmail(email: string, resumeUrl: string,
           
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #666; font-size: 14px;">
             <p>Ready to land your dream job? Share your resume with potential employers!</p>
-            <p>Best regards,<br><strong>The DevFolio Team</strong></p>
+            <p>Best regards,<br><strong>The Limi.ai Team</strong></p>
           </div>
         </body>
         </html>

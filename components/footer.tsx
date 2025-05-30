@@ -34,7 +34,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} DevFolio. All rights reserved.
+          &copy; {new Date().getFullYear()} Limi.ai. All rights reserved.
         </div>
       </div>
     </footer>
