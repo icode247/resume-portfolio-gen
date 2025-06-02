@@ -1,10 +1,31 @@
+import AnimatedStarsBackground from "../animated-stars-background";
+import DribbbleProjectsSection from "../dribbble-projects-section";
+import BehanceProjectsSection from "../behance-projects-section";
+import LinkedInDataSection from "../linkedin-data-section"; // Import LinkedIn section
+
 interface CreativePortfolioProps {
   data: any
 }
 
 export function CreativePortfolio({ data }: CreativePortfolioProps) {
   const portfolio = data?.portfolio || data; // Handle both data structures
-  
+  const heroConfig = portfolio?.heroConfig || { background: "bg-gradient-to-br from-yellow-400/10 via-transparent to-orange-600/10", animation: "none" };
+  const dribbbleProjects = portfolio?.dribbbleProjects || [];
+  const behanceProjects = portfolio?.behanceProjects || [];
+  // Extract LinkedIn specific data for clarity, or pass portfolio directly
+  const linkedInData = {
+    name: portfolio?.name, // Name might be updated by LinkedIn data
+    headline: portfolio?.bio, // Bio might be used as headline, or a specific linkedinHeadline field
+    summary: portfolio?.summary, // Summary might be updated by LinkedIn
+    avatarUrl: portfolio?.avatar, // Avatar might be updated by LinkedIn
+    linkedInProfileUrl: portfolio?.linkedInProfileUrl,
+    experiences: portfolio?.linkedInExperience || [],
+    educations: portfolio?.linkedInEducation || [],
+    skills: portfolio?.skills || [], // Main skills array, potentially merged with LinkedIn skills
+    isLinkedInConnected: !!portfolio?.linkedInAccessToken, // True if an access token exists
+  };
+  const shouldRenderLinkedInSection = linkedInData.isLinkedInConnected || linkedInData.linkedInProfileUrl || linkedInData.experiences.length > 0 || linkedInData.educations.length > 0;
+
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
       {/* Navigation - Fixed with lower z-index */}
@@ -35,16 +56,18 @@ export function CreativePortfolio({ data }: CreativePortfolioProps) {
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-transparent to-orange-600/10"></div>
+      <section id="home" className={`min-h-screen flex items-center justify-center relative overflow-hidden ${heroConfig.background}`}>
+        {heroConfig.animation === "stars" && <AnimatedStarsBackground />}
 
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-yellow-300 rounded-full animate-ping"></div>
-          <div className="absolute bottom-32 left-1/4 w-3 h-3 bg-yellow-500 rounded-full animate-bounce"></div>
-          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-yellow-200 rounded-full animate-pulse"></div>
-        </div>
+        {/* Original Animated Background Elements - Kept for layered effect, can be removed if stars are primary */}
+        {heroConfig.animation !== "stars" && ( // Only show these if stars are not active
+          <div className="absolute inset-0">
+            <div className="absolute top-20 left-10 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+            <div className="absolute top-40 right-20 w-1 h-1 bg-yellow-300 rounded-full animate-ping"></div>
+            <div className="absolute bottom-32 left-1/4 w-3 h-3 bg-yellow-500 rounded-full animate-bounce"></div>
+            <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-yellow-200 rounded-full animate-pulse"></div>
+          </div>
+        )}
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <div className="mb-8">
@@ -160,6 +183,37 @@ export function CreativePortfolio({ data }: CreativePortfolioProps) {
           </div>
         </div>
       </section>
+
+      {/* Dribbble Projects Section - Integrated here */}
+      {dribbbleProjects && dribbbleProjects.length > 0 && (
+        <DribbbleProjectsSection
+          projects={dribbbleProjects}
+          title={`Highlights from Dribbble`}
+        />
+      )}
+
+      {/* LinkedIn Data Section - Integrated here */}
+      {shouldRenderLinkedInSection && (
+        <LinkedInDataSection
+          name={linkedInData.name}
+          headline={linkedInData.headline}
+          summary={linkedInData.summary}
+          avatarUrl={linkedInData.avatarUrl}
+          linkedInProfileUrl={linkedInData.linkedInProfileUrl}
+          experiences={linkedInData.experiences}
+          educations={linkedInData.educations}
+          skills={linkedInData.skills}
+          isLinkedInConnected={linkedInData.isLinkedInConnected}
+        />
+      )}
+
+      {/* Behance Projects Section - Integrated here */}
+      {behanceProjects && behanceProjects.length > 0 && (
+        <BehanceProjectsSection
+          projects={behanceProjects}
+          title="Latest from Behance"
+        />
+      )}
 
       {/* Skills Section */}
       <section id="skills" className="py-20 px-6 bg-gray-900">

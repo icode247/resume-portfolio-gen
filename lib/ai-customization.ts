@@ -1,7 +1,15 @@
-import { generateText } from "ai"
-import { openai } from "./ai-config"
+import { generateText } from "ai";
+import { openai } from "./ai-config";
+import { fetchDribbbleShots } from "./dribbble";
+import { fetchBehanceProjects } from "./behance";
+import { getLinkedInAuthorizationUrl } from "./linkedin";
 
 // AI-powered customization processing
+interface HeroStyleData {
+  backgroundColor?: string;
+  animation?: string;
+}
+
 interface CustomizationRequest {
   prompt: string
   currentData: any
@@ -34,7 +42,7 @@ export async function processAICustomization(request: CustomizationRequest): Pro
       
       Analyze the user's request and respond with a JSON object containing:
       {
-        "action": "add_skill" | "remove_skill" | "update_skill" | "update_profile" | "add_project" | "remove_project" | "update_project" | "update_project_link" | "add_experience" | "remove_experience" | "update_experience" | "update_image" | "add_education" | "remove_education" | "update_education" | "add_certification" | "remove_certification" | "update_certification" | "update_contact" | "update_social" | "update_stats" | "toggle_project_featured" | "reorder_items" | "unknown",
+        "action": "add_skill" | "remove_skill" | "update_skill" | "update_profile" | "add_project" | "remove_project" | "update_project" | "update_project_link" | "add_experience" | "remove_experience" | "update_experience" | "update_image" | "add_education" | "remove_education" | "update_education" | "add_certification" | "remove_certification" | "update_certification" | "update_contact" | "update_social" | "update_stats" | "toggle_project_featured" | "reorder_items" | "update_hero_style" | "link_dribbble_account" | "fetch_dribbble_projects" | "link_behance_account" | "fetch_behance_projects" | "initiate_linkedin_oauth" | "store_linkedin_profile_url" | "unknown",
         "data": {
           // Relevant data based on action type
         },
@@ -85,6 +93,37 @@ export async function processAICustomization(request: CustomizationRequest): Pro
       
       ORDERING:
       - reorder_items: { "itemType": "projects|experience|education|certifications", "fromIndex": 0, "toIndex": 2 }
+
+      HERO STYLING (for portfolio templateType):
+      - update_hero_style: { "backgroundColor": "tailwind_color_class OR css_gradient_string", "animation": "stars|none" }
+        Examples:
+        - "make the hero background blue with stars" -> { "action": "update_hero_style", "data": { "backgroundColor": "bg-blue-500", "animation": "stars" } }
+        - "change hero to a gradient from red to orange" -> { "action": "update_hero_style", "data": { "backgroundColor": "bg-gradient-to-r from-red-500 to-orange-500" } }
+        - "remove hero animation" -> { "action": "update_hero_style", "data": { "animation": "none" } }
+
+      DRIBBBLE INTEGRATION (for portfolio templateType):
+      - link_dribbble_account: { "username": "dribbble_username" }
+        Examples:
+        - "Connect my Dribbble account a_user_name" -> { "action": "link_dribbble_account", "data": { "username": "a_user_name" } }
+        - "Show my Dribbble shots from a_user_name" -> { "action": "link_dribbble_account", "data": { "username": "a_user_name" } }
+      - fetch_dribbble_projects: (no data needed, uses existing username)
+        Example:
+        - "Refresh my Dribbble projects" -> { "action": "fetch_dribbble_projects", "data": {} }
+
+      BEHANCE INTEGRATION (for portfolio templateType):
+      - link_behance_account: { "username": "behance_username" }
+        Examples:
+        - "Link my Behance: a_username" -> { "action": "link_behance_account", "data": { "username": "a_username" } }
+        - "Get my Behance projects from a_username" -> { "action": "link_behance_account", "data": { "username": "a_username" } }
+      - fetch_behance_projects: (no data needed, uses existing username)
+        Example:
+        - "Refresh my Behance projects" -> { "action": "fetch_behance_projects", "data": {} }
+
+      LINKEDIN INTEGRATION (for portfolio templateType):
+      - initiate_linkedin_oauth: (no data needed) - AI should inform user they need to click a link.
+        Example: "Connect my LinkedIn account" -> { "action": "initiate_linkedin_oauth", "data": {} }
+      - store_linkedin_profile_url: { "url": "linkedin_profile_url" }
+        Example: "My LinkedIn is https://linkedin.com/in/auser" -> { "action": "store_linkedin_profile_url", "data": { "url": "https://linkedin.com/in/auser" } }
 
       Important Guidelines:
       - When adding items to arrays (skills, projects, experience, etc.), NEVER override existing items, always append or prepend
@@ -533,6 +572,164 @@ export async function processAICustomization(request: CustomizationRequest): Pro
           }
         }
         break
+
+      case "update_hero_style":
+        if (templateType === "portfolio" && aiParsedData.data) {
+          if (!workingData.heroConfig) {
+            workingData.heroConfig = {}
+          }
+          let descParts = []
+          if (aiParsedData.data.backgroundColor) {
+            workingData.heroConfig.background = aiParsedData.data.backgroundColor
+            descParts.push(`background to ${aiParsedData.data.backgroundColor}`)
+          }
+          if (aiParsedData.data.animation) {
+            workingData.heroConfig.animation = aiParsedData.data.animation
+            descParts.push(`animation to ${aiParsedData.data.animation}`)
+          }
+          if (descParts.length > 0) {
+            changeDescription = `Updated hero style: ${descParts.join(" and ")}`
+          } else {
+            return { success: false, error: "No hero style data provided for update."}
+          }
+        } else if (templateType !== "portfolio") {
+          return { success: false, error: "Hero styling is only available for portfolios."}
+        }
+        break
+
+      case "link_dribbble_account":
+        if (templateType === "portfolio" && aiParsedData.data?.username) {
+          const dribbbleUsername = aiParsedData.data.username;
+          workingData.dribbbleUsername = dribbbleUsername;
+          // Asynchronously fetch Dribbble projects and update workingData
+          // No need to await here if we want to respond quickly,
+          // but for data consistency it's better to await.
+          try {
+            const projects = await fetchDribbbleShots(dribbbleUsername);
+            workingData.dribbbleProjects = projects;
+            if (projects.length > 0) {
+              changeDescription = `Linked Dribbble account: ${dribbbleUsername} and fetched ${projects.length} projects.`;
+            } else {
+              changeDescription = `Linked Dribbble account: ${dribbbleUsername}. No projects found or token issue. Ensure token is valid and has access.`;
+            }
+          } catch (error) {
+            console.error("Failed to fetch Dribbble projects after linking account:", error);
+            workingData.dribbbleProjects = [];
+            changeDescription = `Linked Dribbble account: ${dribbbleUsername}, but failed to fetch projects. Please check console for errors.`;
+            // Optionally, return a partial success or indicate the error more clearly to the user
+          }
+        } else if (templateType !== "portfolio") {
+          return { success: false, error: "Dribbble integration is only available for portfolios." };
+        } else {
+          return { success: false, error: "Dribbble username not provided." };
+        }
+        break;
+
+      case "fetch_dribbble_projects":
+        if (templateType === "portfolio") {
+          if (workingData.dribbbleUsername) {
+            try {
+              const projects = await fetchDribbbleShots(workingData.dribbbleUsername);
+              workingData.dribbbleProjects = projects;
+              if (projects.length > 0) {
+                changeDescription = `Refreshed Dribbble projects. Found ${projects.length} items for ${workingData.dribbbleUsername}.`;
+              } else {
+                changeDescription = `Refreshed Dribbble projects for ${workingData.dribbbleUsername}. No projects found or token issue.`;
+              }
+            } catch (error) {
+              console.error("Failed to fetch Dribbble projects:", error);
+              workingData.dribbbleProjects = [];
+              changeDescription = `Failed to refresh Dribbble projects for ${workingData.dribbbleUsername}. Please check console for errors.`;
+            }
+          } else {
+            return { success: false, error: "No Dribbble account linked. Please link an account first." };
+          }
+        } else {
+          return { success: false, error: "Dribbble integration is only available for portfolios." };
+        }
+        break;
+
+      case "link_behance_account":
+        if (templateType === "portfolio" && aiParsedData.data?.username) {
+          const behanceUsername = aiParsedData.data.username;
+          workingData.behanceUsername = behanceUsername;
+          try {
+            const projects = await fetchBehanceProjects(behanceUsername);
+            workingData.behanceProjects = projects;
+            if (projects.length > 0) {
+              changeDescription = `Linked Behance account: ${behanceUsername} and fetched ${projects.length} projects.`;
+            } else {
+              changeDescription = `Linked Behance account: ${behanceUsername}. No projects found or API key issue. Ensure API key is valid.`;
+            }
+          } catch (error) {
+            console.error("Failed to fetch Behance projects after linking account:", error);
+            workingData.behanceProjects = [];
+            changeDescription = `Linked Behance account: ${behanceUsername}, but failed to fetch projects. Check console for errors.`;
+          }
+        } else if (templateType !== "portfolio") {
+          return { success: false, error: "Behance integration is only available for portfolios." };
+        } else {
+          return { success: false, error: "Behance username not provided." };
+        }
+        break;
+
+      case "fetch_behance_projects":
+        if (templateType === "portfolio") {
+          if (workingData.behanceUsername) {
+            try {
+              const projects = await fetchBehanceProjects(workingData.behanceUsername);
+              workingData.behanceProjects = projects;
+              if (projects.length > 0) {
+                changeDescription = `Refreshed Behance projects. Found ${projects.length} items for ${workingData.behanceUsername}.`;
+              } else {
+                changeDescription = `Refreshed Behance projects for ${workingData.behanceUsername}. No projects found or API key issue.`;
+              }
+            } catch (error) {
+              console.error("Failed to fetch Behance projects:", error);
+              workingData.behanceProjects = [];
+              changeDescription = `Failed to refresh Behance projects for ${workingData.behanceUsername}. Check console for errors.`;
+            }
+          } else {
+            return { success: false, error: "No Behance account linked. Please link an account first." };
+          }
+        } else {
+          return { success: false, error: "Behance integration is only available for portfolios." };
+        }
+        break;
+
+      case "initiate_linkedin_oauth":
+        if (templateType === "portfolio") {
+          const authUrl = getLinkedInAuthorizationUrl();
+          if (authUrl.startsWith("/error")) {
+             changeDescription = "Could not initiate LinkedIn connection: LinkedIn API credentials are not configured correctly in the environment.";
+             return { success: false, error: changeDescription };
+          }
+          // The actual redirection must be handled by the frontend.
+          // The backend provides the URL and instructions.
+          workingData.linkedInAccessToken = null; // Clear any old token
+          changeDescription = `To connect your LinkedIn account, please visit this authorization URL: ${authUrl} - After authorization, you may need to inform the AI to finalize or refresh your data.`;
+        } else {
+          return { success: false, error: "LinkedIn integration is only available for portfolios." };
+        }
+        break;
+
+      case "store_linkedin_profile_url":
+        if (templateType === "portfolio" && aiParsedData.data?.url) {
+          workingData.linkedInProfileUrl = aiParsedData.data.url;
+          // Optionally, clear related LinkedIn data if only URL is stored now
+          // workingData.linkedInAccessToken = null;
+          // workingData.linkedInExperience = [];
+          // workingData.linkedInEducation = [];
+          // if (workingData.skills) { // Assuming skills might be a mix
+          //   // This part is tricky: we don't know which skills were from LinkedIn
+          // }
+          changeDescription = `Stored LinkedIn profile URL: ${aiParsedData.data.url}. Note: Full profile data import requires OAuth connection.`;
+        } else if (templateType !== "portfolio") {
+          return { success: false, error: "LinkedIn integration is only available for portfolios." };
+        } else {
+          return { success: false, error: "LinkedIn profile URL not provided." };
+        }
+        break;
 
       default:
         return {

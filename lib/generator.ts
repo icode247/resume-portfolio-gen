@@ -4,6 +4,15 @@ import {
 } from "./huggingface";
 import { sendResumeGeneratedEmail } from "./actions";
 import { createResume, createPortfolio, getPortfolio } from "./database";
+import { fetchDribbbleShots, DribbbleShot } from "./dribbble";
+import { fetchBehanceProjects, BehanceProject } from "./behance";
+import {
+  fetchLinkedInData,
+  LinkedInPosition,
+  LinkedInEducationEntry,
+  // LinkedInSkill, // Using string[] for skills for now
+  PartialPortfolioContentFromLinkedIn,
+} from "./linkedin";
 
 interface GitHubProfile {
   login: string;
@@ -82,10 +91,66 @@ export async function generateFromGithub(
 
     // Generate AI-powered content using Hugging Face
     const resumeContent = await generateResumeContent(profile, originalRepos);
-    const portfolioContent = await generatePortfolioContent(
+    let portfolioContent = await generatePortfolioContent(
       profile,
       originalRepos
     );
+
+    // Fetch Dribbble shots if a username is available
+    if (portfolioContent.dribbbleUsername) {
+      try {
+        const dribbbleShots = await fetchDribbbleShots(portfolioContent.dribbbleUsername);
+        portfolioContent.dribbbleProjects = dribbbleShots;
+      } catch (error) {
+        console.error("Failed to fetch Dribbble projects during generation:", error);
+        // Non-critical error, proceed with empty dribbbleProjects
+        portfolioContent.dribbbleProjects = [];
+      }
+    }
+
+    // Fetch Behance projects if a username is available
+    if (portfolioContent.behanceUsername) {
+      try {
+        const behanceData = await fetchBehanceProjects(portfolioContent.behanceUsername);
+        portfolioContent.behanceProjects = behanceData;
+      } catch (error) {
+        console.error("Failed to fetch Behance projects during generation:", error);
+        // Non-critical error, proceed with empty behanceProjects
+        portfolioContent.behanceProjects = [];
+      }
+    }
+
+    // Fetch LinkedIn data if an access token is available
+    if (portfolioContent.linkedInAccessToken) {
+      try {
+        const linkedInData: PartialPortfolioContentFromLinkedIn = await fetchLinkedInData(portfolioContent.linkedInAccessToken);
+
+        // Merge LinkedIn data into portfolioContent
+        // Prioritize already existing data unless LinkedIn data is more complete or explicitly preferred
+        if (linkedInData.name && !portfolioContent.name) portfolioContent.name = linkedInData.name;
+        if (linkedInData.bio && !portfolioContent.bio) portfolioContent.bio = linkedInData.bio; // Or headline
+        if (linkedInData.summary && !portfolioContent.summary) portfolioContent.summary = linkedInData.summary;
+        if (linkedInData.avatar && !portfolioContent.avatar) portfolioContent.avatar = linkedInData.avatar;
+        if (linkedInData.email && !portfolioContent.email) portfolioContent.email = linkedInData.email;
+        if (linkedInData.location && !portfolioContent.location) portfolioContent.location = linkedInData.location;
+
+        if (linkedInData.experience && linkedInData.experience.length > 0) {
+          // Basic override, could be smarter (e.g. merge with existing GitHub-generated experience)
+          portfolioContent.linkedInExperience = linkedInData.experience;
+        }
+        if (linkedInData.education && linkedInData.education.length > 0) {
+          portfolioContent.linkedInEducation = linkedInData.education;
+        }
+        if (linkedInData.skills && linkedInData.skills.length > 0) {
+          // Replace or merge with existing skills
+          portfolioContent.skills = Array.from(new Set([...(portfolioContent.skills || []), ...linkedInData.skills]));
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch LinkedIn data during generation:", error);
+        // Non-critical error, proceed without LinkedIn data
+      }
+    }
 
     let resumeId: string;
     let portfolioId: string;
@@ -227,6 +292,16 @@ async function generatePortfolioContent(
   const summary = await generateProfessionalSummary(profile, repos)
   
   return {
+    heroConfig: { background: "bg-gradient-to-b from-background to-muted/50", animation: "none" },
+    dribbbleUsername: profile.login, // Using GitHub login as a placeholder
+    dribbbleProjects: [] as DribbbleShot[],
+    behanceUsername: profile.login, // Using GitHub login as a placeholder
+    behanceProjects: [] as BehanceProject[],
+    linkedInProfileUrl: null,
+    linkedInAccessToken: null, // This will be set after OAuth flow
+    linkedInExperience: [] as LinkedInPosition[],
+    linkedInEducation: [] as LinkedInEducationEntry[],
+    // linkedInSkills: [] as string[], // Skills are merged into main skills array
     name: profile.name || profile.login,
     bio: profile.bio || "Passionate developer building amazing projects",
     avatar: profile.avatar_url,
@@ -248,7 +323,7 @@ async function generatePortfolioContent(
       ),
     },
     summary,
-    skills: extractSkillsWithProficiency(repos),
+    skills: extractSkillsWithProficiency(repos), // Initial skills from GitHub
     projects: await Promise.all(
       repos.slice(0, 9).map(async (repo) => ({
         id: repo.name,
